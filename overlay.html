@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stream Overlay</title>
+    <!-- Importing clean, bold fonts to match the requested design -->
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Roboto+Mono:wght@700&family=Roboto:wght@500;900&display=swap" rel="stylesheet">
+    <style>
+        /* GREEN SCREEN BACKGROUND */
+        body {
+            background-color: #00FF00; /* Chroma key green */
+            margin: 0;
+            padding: 40px;
+            overflow: hidden; /* No scrollbars on stream */
+        }
+
+        /* MAIN CONTAINER + ANIMATION */
+        .app-wrapper {
+            transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+            transform: translateX(0);
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .app-wrapper.hidden {
+            transform: translateX(-150%);
+        }
+
+        /* TOP TIMER SECTION */
+        .timer-header {
+            display: flex;
+            align-items: stretch;
+            height: 48px;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+        }
+        .launch-label {
+            background-color: white;
+            color: black;
+            font-family: 'Oswald', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            padding: 0 15px;
+            display: flex;
+            align-items: center;
+            letter-spacing: 1px;
+        }
+        .time-display {
+            background-color: rgba(10, 10, 10, 0.95);
+            color: white;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 28px;
+            font-weight: 700;
+            padding: 0 15px;
+            display: flex;
+            align-items: center;
+            min-width: 140px;
+            justify-content: center;
+        }
+
+        /* PROGRESS BAR */
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background-color: rgba(0, 0, 0, 0.4);
+            margin-top: 2px;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #38bdf8; /* Cyan matching the image */
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        /* MESSAGE BOX */
+        .message-box {
+            display: inline-flex;
+            align-items: center;
+            background-color: #ef4444; /* Default Red */
+            color: white;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 900;
+            font-size: 16px;
+            padding: 4px 10px;
+            margin-top: 10px;
+            border-radius: 3px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+            opacity: 1;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            transform: translateY(0);
+        }
+        .message-box.hidden {
+            opacity: 0;
+            transform: translateY(-10px);
+            pointer-events: none;
+        }
+        .icon-x {
+            background: white;
+            color: #ef4444;
+            border-radius: 50%;
+            width: 14px;
+            height: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            margin-right: 8px;
+        }
+
+        /* FLIGHT PLAN SECTION */
+        .flight-plan {
+            margin-top: 50px;
+            font-family: 'Roboto', sans-serif;
+        }
+        .fp-title {
+            color: white;
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+        .fp-title::after {
+            content: '';
+            display: block;
+            width: 50%;
+            height: 4px;
+            background-color: #38bdf8;
+            margin-top: 4px;
+        }
+        
+        .timeline {
+            border-left: 2px solid rgba(255, 255, 255, 0.3);
+            padding-left: 20px;
+            position: relative;
+        }
+        .fp-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 18px;
+            position: relative;
+        }
+        /* Connective dot */
+        .fp-item::before {
+            content: '';
+            position: absolute;
+            left: -25px; /* Offset to center on the border */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background-color: #38bdf8;
+            border-radius: 50%;
+            box-shadow: 0 0 5px #38bdf8;
+        }
+        
+        .fp-time {
+            background-color: rgba(255, 255, 255, 0.85);
+            color: black;
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 2px 6px;
+            margin-right: 12px;
+            border-radius: 2px;
+        }
+        .fp-text {
+            color: white;
+            font-weight: 900;
+            font-size: 18px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            text-transform: uppercase;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-wrapper" id="app">
+        
+        <div class="timer-section">
+            <div class="timer-header">
+                <div class="launch-label">LAUNCH</div>
+                <div class="time-display" id="time-val">- 00:00:00</div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-fill" id="progress-bar"></div>
+            </div>
+            
+            <div class="message-box hidden" id="msg-box">
+                <span class="icon-x" id="msg-icon">X</span>
+                <span id="msg-text">CANCELED</span>
+            </div>
+        </div>
+
+        <div class="flight-plan">
+            <div class="fp-title">FLIGHT PLAN:</div>
+            <div class="timeline" id="timeline-container">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Main Loop
+        setInterval(() => {
+            const stateStr = localStorage.getItem('spaceXState');
+            if (!stateStr) return;
+            
+            const state = JSON.parse(stateStr);
+            
+            // 1. Panel Visibility Animation
+            const app = document.getElementById('app');
+            if (state.panelOpen) {
+                app.classList.remove('hidden');
+            } else {
+                app.classList.add('hidden');
+            }
+
+            // 2. Timer Math
+            let diffMs = state.remainingMs;
+            if (!state.paused) {
+                diffMs = state.tZero - Date.now();
+            }
+
+            const isNegative = diffMs <= 0;
+            const absDiff = Math.abs(diffMs);
+            
+            const totalSecs = Math.floor(absDiff / 1000);
+            const hrs = Math.floor(totalSecs / 3600);
+            const mins = Math.floor((totalSecs % 3600) / 60);
+            const secs = totalSecs % 60;
+            
+            const sign = isNegative ? "+" : "-";
+            const timeStr = `${sign} ${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            
+            document.getElementById('time-val').innerText = timeStr;
+
+            // 3. Progress Bar Math
+            let prog = 100;
+            if (!isNegative && state.durationMs > 0) {
+                prog = ((state.durationMs - diffMs) / state.durationMs) * 100;
+                // Cap between 0 and 100
+                prog = Math.max(0, Math.min(100, prog));
+            }
+            document.getElementById('progress-bar').style.width = prog + '%';
+
+            // 4. Message Box
+            const msgBox = document.getElementById('msg-box');
+            if (state.message.show) {
+                msgBox.classList.remove('hidden');
+                document.getElementById('msg-text').innerText = state.message.text;
+                msgBox.style.backgroundColor = state.message.color;
+                document.getElementById('msg-icon').style.color = state.message.color;
+            } else {
+                msgBox.classList.add('hidden');
+            }
+
+            // 5. Flight Plan Update
+            // To prevent unnecessary DOM updates, we convert the array to string and compare
+            const currentPlanStr = JSON.stringify(state.flightPlan);
+            if (window.lastPlanStr !== currentPlanStr) {
+                window.lastPlanStr = currentPlanStr;
+                const timeline = document.getElementById('timeline-container');
+                timeline.innerHTML = '';
+                
+                state.flightPlan.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'fp-item';
+                    div.innerHTML = `
+                        <div class="fp-time">${item.time}</div>
+                        <div class="fp-text">${item.text}</div>
+                    `;
+                    timeline.appendChild(div);
+                });
+            }
+
+        }, 100); // 100ms interval for extremely smooth UI updates
+    </script>
+</body>
+</html>
