@@ -1,219 +1,613 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <title>Launch Control Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Karantina:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+    <title>COSMOS Control</title>
     <style>
-        body { font-family: 'Roboto', sans-serif; }
-        /* Custom scrollbar for dark mode */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #0F172A; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        :root {
+            --cyan: #68e3ff;
+            --cyan-dark: #00b7df;
+            --black: #07090c;
+            --panel: #11151b;
+            --panel-2: #171c24;
+            --line: #2d3541;
+            --white: #f7f9fb;
+            --muted: #87919f;
+            --red: #ff4545;
+            --green: #2ee6a6;
+            --yellow: #ffc857;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 22px;
+            background:
+                linear-gradient(rgba(104,227,255,.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(104,227,255,.025) 1px, transparent 1px),
+                #090c11;
+            background-size: 28px 28px;
+            color: var(--white);
+            font-family: "Inter", sans-serif;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            padding: 13px 16px;
+            border: 1px solid var(--cyan-dark);
+            background: rgba(7,9,12,.94);
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: -.7px;
+        }
+
+        .logo span { color: var(--cyan); }
+
+        .connection {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .9px;
+        }
+
+        .connection::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            background: var(--green);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--green);
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 14px;
+            align-items: start;
+        }
+
+        .panel {
+            grid-column: span 6;
+            background: rgba(17,21,27,.97);
+            border: 1px solid var(--line);
+            border-top: 3px solid var(--cyan);
+            box-shadow: 0 12px 30px rgba(0,0,0,.28);
+        }
+
+        .panel.wide { grid-column: 1 / -1; }
+
+        .panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 46px;
+            padding: 0 14px;
+            border-bottom: 1px solid var(--line);
+            background: rgba(255,255,255,.018);
+        }
+
+        .panel-head h2 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            font-size: 13px;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+        }
+
+        .panel-head .material-symbols-outlined {
+            color: var(--cyan);
+            font-size: 19px;
+        }
+
+        .panel-body { padding: 14px; }
+
+        .row {
+            display: flex;
+            gap: 9px;
+            margin-bottom: 10px;
+        }
+
+        .row:last-child { margin-bottom: 0; }
+
+        .field {
+            flex: 1;
+            min-width: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--muted);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .7px;
+            text-transform: uppercase;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            min-height: 38px;
+            padding: 9px 10px;
+            border: 1px solid #343e4c;
+            border-radius: 0;
+            outline: none;
+            background: #0b0f15;
+            color: white;
+            font: inherit;
+            font-size: 12px;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        textarea {
+            min-height: 76px;
+            resize: vertical;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--cyan-dark);
+            box-shadow: 0 0 0 2px rgba(104,227,255,.1);
+        }
+
+        .time-input {
+            font-family: "Karantina", system-ui;
+            font-size: 28px;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        button {
+            min-height: 38px;
+            padding: 9px 13px;
+            border: 0;
+            border-radius: 0;
+            background: var(--cyan);
+            color: #061016;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .45px;
+            text-transform: uppercase;
+            transition: transform .16s, filter .16s, background .16s;
+        }
+
+        button:hover { filter: brightness(1.08); transform: translateY(-1px); }
+        button:active { transform: translateY(1px); }
+
+        button.dark { background: #27303c; color: white; }
+        button.red { background: var(--red); color: white; }
+        button.green { background: var(--green); color: #06110d; }
+        button.yellow { background: var(--yellow); color: #171005; }
+        button.ghost { background: transparent; border: 1px solid #3b4655; color: white; }
+        button.small { min-height: 31px; padding: 6px 9px; font-size: 9px; }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .flight-items {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            margin-top: 8px;
+        }
+
+        .flight-row {
+            display: grid;
+            grid-template-columns: 32px 125px 1fr 36px;
+            gap: 7px;
+            align-items: center;
+            padding: 8px;
+            border: 1px solid #2d3744;
+            border-left: 4px solid var(--cyan);
+            background: linear-gradient(90deg, rgba(104,227,255,.05), rgba(12,16,22,.98) 22%);
+            clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 0 100%);
+        }
+
+        .flight-row input {
+            min-height: 34px;
+            padding: 6px 8px;
+        }
+
+        .plan-time-input {
+            font-variant-numeric: tabular-nums;
+            letter-spacing: .5px;
+            text-align: center;
+            color: var(--cyan);
+            font-weight: 800;
+        }
+
+        .plan-label-input {
+            font-weight: 700;
+            letter-spacing: .2px;
+        }
+
+        .active-check {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--cyan);
+        }
+
+        .remove-btn {
+            min-height: 32px;
+            padding: 0;
+            background: #2a3039;
+            color: var(--red);
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .monitor {
+            min-height: 45px;
+            padding: 9px;
+            border: 1px dashed #3a4553;
+            background: #0a0e13;
+        }
+
+        .monitor-empty {
+            color: #616c79;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .monitor-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 9px;
+            border-left: 4px solid var(--cyan);
+            background: #171d25;
+            font-size: 11px;
+        }
+
+        .monitor-item + .monitor-item { margin-top: 6px; }
+
+        .status-text {
+            color: var(--green);
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: .8px;
+        }
+
+        @media (max-width: 900px) {
+            .panel { grid-column: 1 / -1; }
+            .button-grid { grid-template-columns: 1fr; }
+            .flight-row { grid-template-columns: 24px 95px 1fr 32px; }
+        }
     </style>
 </head>
-<body class="bg-[#0F172A] text-slate-200 min-h-screen p-8">
+<body>
+    <header class="topbar">
+        <div class="logo">COSMOS <span>CONTROL</span></div>
+        <div class="connection">Broadcast channel online</div>
+    </header>
 
-    <div class="max-w-5xl mx-auto">
-        <h1 class="text-3xl font-bold mb-8 text-white flex items-center gap-3">
-            <span class="bg-blue-600 px-3 py-1 rounded">🚀</span>
-            מערכת בקרת שיגור (Control Panel)
-        </h1>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            <!-- שליטה בטיימר -->
-            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-                <h2 class="text-xl font-bold mb-4 text-white border-b border-slate-700 pb-2">שליטה בטיימר</h2>
-                
-                <div class="flex gap-4 mb-6">
-                    <div>
-                        <label class="block text-sm mb-1 text-slate-400">שעות</label>
-                        <input type="number" id="inp-hrs" value="0" min="0" class="w-20 bg-slate-900 border border-slate-600 rounded p-2 text-center text-xl text-white">
+    <main class="dashboard">
+        <section class="panel">
+            <div class="panel-head">
+                <h2><span class="material-symbols-outlined">timer</span> Timer</h2>
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="field">
+                        <label>Timer label</label>
+                        <input id="timerLabelInput" value="LAUNCH">
                     </div>
-                    <div>
-                        <label class="block text-sm mb-1 text-slate-400">דקות</label>
-                        <input type="number" id="inp-mins" value="5" min="0" max="59" class="w-20 bg-slate-900 border border-slate-600 rounded p-2 text-center text-xl text-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm mb-1 text-slate-400">שניות</label>
-                        <input type="number" id="inp-secs" value="0" min="0" max="59" class="w-20 bg-slate-900 border border-slate-600 rounded p-2 text-center text-xl text-white">
+                    <div class="field">
+                        <label>Time HH:MM:SS</label>
+                        <input id="timeInput" class="time-input" value="00:15:00">
                     </div>
                 </div>
-
-                <div class="flex flex-wrap gap-3">
-                    <button onclick="setTimer()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded transition">הגדר זמן</button>
-                    <button onclick="startTimer()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded transition">▶ התחל</button>
-                    <button onclick="pauseTimer()" class="bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 px-4 rounded transition">⏸ עצור</button>
+                <div class="row">
+                    <button onclick="applyTimer()">Apply time</button>
+                    <button class="ghost" onclick="sendTimerCmd('show')">Show timer</button>
+                    <button class="dark" onclick="sendTimerCmd('hide')">Hide timer</button>
+                </div>
+                <div class="button-grid">
+                    <button class="green" onclick="sendTimerCmd('play')">Play</button>
+                    <button class="yellow" onclick="sendTimerCmd('pause')">Pause</button>
+                    <button class="red" onclick="sendTimerCmd('reset')">Reset</button>
                 </div>
             </div>
+        </section>
 
-            <!-- נראות ומסך -->
-            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg flex flex-col justify-center">
-                <h2 class="text-xl font-bold mb-4 text-white border-b border-slate-700 pb-2">תצוגת שכבה (Overlay)</h2>
-                <div class="flex items-center justify-between mb-4">
-                    <span class="text-slate-300">הכנס / הוצא את כל הבר מהמסך (אנימציית החלקה):</span>
+        <section class="panel">
+            <div class="panel-head">
+                <h2><span class="material-symbols-outlined">subtitles</span> Lower Third</h2>
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="field">
+                        <label>Location / tag</label>
+                        <input id="lowerLocationInput" value="LIVE STARBASE">
+                    </div>
                 </div>
-                <div class="flex gap-4">
-                    <button onclick="togglePanel(true)" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded transition">פתוח (Show)</button>
-                    <button onclick="togglePanel(false)" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-4 rounded transition">סגור (Hide)</button>
+                <div class="row">
+                    <div class="field">
+                        <label>Headline</label>
+                        <input id="lowerTitleInput" value="STARSHIP FIRST ORBIT TEST FLIGHT">
+                    </div>
+                </div>
+                <div class="row">
+                    <button onclick="updateLowerThird()">Update title</button>
+                    <button class="dark" onclick="send('lower:hide')">Hide</button>
                 </div>
             </div>
+        </section>
 
-            <!-- הודעות קופצות -->
-            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-                <h2 class="text-xl font-bold mb-4 text-white border-b border-slate-700 pb-2">הודעת מערכת (Popup)</h2>
-                
-                <div class="mb-4">
-                    <label class="block text-sm mb-1 text-slate-400">טקסט ההודעה</label>
-                    <input type="text" id="msg-text" value="CANCELED" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white">
-                </div>
-                
-                <div class="mb-6">
-                    <label class="block text-sm mb-1 text-slate-400">צבע</label>
-                    <select id="msg-color" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white">
-                        <option value="#ef4444">אדום (התראה)</option>
-                        <option value="#f59e0b">כתום (אזהרה)</option>
-                        <option value="#10b981">ירוק (הצלחה)</option>
-                        <option value="#3b82f6">כחול (מידע)</option>
-                    </select>
+        <section class="panel">
+            <div class="panel-head">
+                <h2><span class="material-symbols-outlined">campaign</span> Alerts</h2>
+            </div>
+            <div class="panel-body">
+                <div class="preset-grid">
+                    <button class="red" onclick="sendPreset('LAUNCH CANCELED','Mission sequence has been stopped.','cancel','#ff4545')">Canceled</button>
+                    <button class="yellow" onclick="sendPreset('SYSTEM WARNING','Review telemetry before proceeding.','warning','#ffc857')">Warning</button>
+                    <button class="green" onclick="sendPreset('MISSION GO','All systems are nominal.','check_circle','#2ee6a6')">Mission Go</button>
+                    <button onclick="sendPreset('FLIGHT UPDATE','New flight-plan data received.','flight_takeoff','#68e3ff')">Flight Update</button>
                 </div>
 
-                <div class="flex gap-4">
-                    <button onclick="showMessage(true)" class="flex-1 bg-slate-600 hover:bg-slate-500 text-white font-bold py-2 px-4 rounded transition">הצג הודעה</button>
-                    <button onclick="showMessage(false)" class="flex-1 bg-slate-900 border border-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded transition">הסתר הודעה</button>
+                <div class="row">
+                    <div class="field">
+                        <label>Alert title</label>
+                        <input id="aTitle" value="SYSTEM MESSAGE">
+                    </div>
+                    <div class="field">
+                        <label>Icon</label>
+                        <select id="aIcon">
+                            <option value="info">Info</option>
+                            <option value="warning">Warning</option>
+                            <option value="cancel">Cancel</option>
+                            <option value="flight_takeoff">Flight</option>
+                            <option value="satellite_alt">Satellite</option>
+                            <option value="check_circle">Success</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="field">
+                        <label>Description</label>
+                        <input id="aDesc" value="Telemetry update received.">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="field">
+                        <label>Accent</label>
+                        <select id="aColor">
+                            <option value="#68e3ff">Cyan</option>
+                            <option value="#ff4545">Red</option>
+                            <option value="#ffc857">Yellow</option>
+                            <option value="#2ee6a6">Green</option>
+                            <option value="#ffffff">White</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Duration seconds</label>
+                        <input id="aDuration" type="number" min="2" max="60" value="6">
+                    </div>
+                </div>
+                <button style="width:100%" onclick="sendCustomAlert()">Send alert</button>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
+                <h2><span class="material-symbols-outlined">tune</span> Screen Details</h2>
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="field">
+                        <label>Brand</label>
+                        <input id="brandInput" value="COSMOS">
+                    </div>
+                    <button onclick="updateBrand()">Update</button>
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label>Status badge text</label>
+                        <input id="statusTextInput" value="CANCELED">
+                    </div>
+                    <div class="field">
+                        <label>Status icon</label>
+                        <select id="statusIconInput">
+                            <option value="cancel">Cancel</option>
+                            <option value="warning">Warning</option>
+                            <option value="check_circle">Approved</option>
+                            <option value="schedule">Schedule</option>
+                            <option value="flight_takeoff">Flight</option>
+                            <option value="info">Info</option>
+                            <option value="emergency">Emergency</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Status color</label>
+                        <select id="statusColorInput">
+                            <option value="#ff4545">Red</option>
+                            <option value="#ffc857">Yellow</option>
+                            <option value="#2ee6a6">Green</option>
+                            <option value="#68e3ff">Cyan</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <button onclick="updateStatus()">Update + show</button>
+                    <button class="dark" onclick="send('status:hide')">Hide</button>
                 </div>
             </div>
+        </section>
 
-            <!-- תכנון טיסה -->
-            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-                <h2 class="text-xl font-bold mb-4 text-white border-b border-slate-700 pb-2">תכנון טיסה (Flight Plan)</h2>
-                
-                <div id="flight-plan-list" class="space-y-3 mb-4 max-h-48 overflow-y-auto pr-2">
-                    <!-- מוזרק מ-JS -->
+        <section class="panel wide">
+            <div class="panel-head">
+                <h2><span class="material-symbols-outlined">route</span> Flight Plan Editor</h2>
+                <button class="small ghost" onclick="addFlightRow()">+ Add event</button>
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="field">
+                        <label>Panel title</label>
+                        <input id="flightPlanTitleInput" value="FLIGHT PLAN:">
+                    </div>
                 </div>
 
-                <div class="flex gap-2 mb-4">
-                    <input type="text" id="new-fp-time" placeholder="00:00:00" class="w-1/3 bg-slate-900 border border-slate-600 rounded p-2 text-white text-sm" dir="ltr">
-                    <input type="text" id="new-fp-text" placeholder="שם האירוע (למשל STAGE SEP)" class="w-2/3 bg-slate-900 border border-slate-600 rounded p-2 text-white text-sm">
-                </div>
+                <div class="flight-items" id="flightItems"></div>
 
-                <div class="flex gap-4">
-                    <button onclick="addFlightItem()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded transition">+ הוסף שלב</button>
-                    <button onclick="saveFlightPlan()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded transition">💾 שמור עדכונים</button>
+                <div class="row" style="margin-top:12px">
+                    <button onclick="sendFlightPlan()">Update + show plan</button>
+                    <button class="dark" onclick="send('flightplan:hide')">Hide plan</button>
                 </div>
             </div>
+        </section>
 
-        </div>
-    </div>
+        <section class="panel wide">
+            <div class="panel-head">
+                <h2><span class="material-symbols-outlined">monitor</span> Live Alerts</h2>
+            </div>
+            <div class="panel-body">
+                <div class="monitor" id="activeAlerts">
+                    <div class="monitor-empty" id="noAlertsMsg">No active alerts on screen</div>
+                </div>
+            </div>
+        </section>
+    </main>
 
-    <script>
-        const DEFAULT_STATE = {
-            tZero: Date.now() + 300000,
-            paused: true,
-            remainingMs: 300000,
-            durationMs: 300000,
-            panelOpen: true,
-            message: { show: false, text: "CANCELED", color: "#ef4444" },
-            flightPlan: [
-                { time: "00:00:00", text: "LAUNCH" },
-                { time: "00:00:30", text: "MAX Q" },
-                { time: "00:01:30", text: "STAGE SEP" },
-                { time: "00:05:00", text: "BOOSTER LANDING" }
-            ]
-        };
+<script>
+    const channel = new BroadcastChannel('dashboard_controls');
 
-        let state = JSON.parse(localStorage.getItem('spaceXState')) || DEFAULT_STATE;
+    const defaultPlan = [
+        ['00:00:00', 'LAUNCH', true],
+        ['00:00:30', 'MAX Q', false],
+        ['00:01:30', 'STAGE SEP', false],
+        ['00:05:00', 'BOOSTER LANDING', false],
+        ['00:09:00', 'DEPLOY PAYLOAD', false],
+        ['00:13:00', 'SHIP LANDING', false]
+    ];
 
-        function saveState() {
-            localStorage.setItem('spaceXState', JSON.stringify(state));
+    function send(action, extra = {}) {
+        channel.postMessage({ action, ...extra });
+    }
+
+    function sendTimerCmd(cmd) {
+        send(`timer:${cmd}`);
+    }
+
+    function applyTimer() {
+        send('timer:label', { label: document.getElementById('timerLabelInput').value || 'LAUNCH' });
+        send('timer:set', { timeStr: document.getElementById('timeInput').value });
+    }
+
+    function updateLowerThird() {
+        send('lower:update', {
+            location: document.getElementById('lowerLocationInput').value,
+            title: document.getElementById('lowerTitleInput').value
+        });
+    }
+
+    function updateBrand() {
+        send('brand:update', { text: document.getElementById('brandInput').value });
+    }
+
+    function updateStatus() {
+        send('status:update', {
+            text: document.getElementById('statusTextInput').value,
+            icon: document.getElementById('statusIconInput').value,
+            color: document.getElementById('statusColorInput').value
+        });
+        send('status:show');
+    }
+
+    function sendCustomAlert() {
+        send('alert:add', {
+            title: document.getElementById('aTitle').value || 'ALERT',
+            desc: document.getElementById('aDesc').value || '',
+            icon: document.getElementById('aIcon').value,
+            accentColor: document.getElementById('aColor').value,
+            duration: parseInt(document.getElementById('aDuration').value, 10) || 6
+        });
+    }
+
+    function sendPreset(title, desc, icon, accentColor) {
+        send('alert:add', { title, desc, icon, accentColor, duration: 6 });
+    }
+
+    function addFlightRow(time = '00:00:00', label = 'NEW EVENT', active = false) {
+        const wrapper = document.getElementById('flightItems');
+        const row = document.createElement('div');
+        row.className = 'flight-row';
+        row.innerHTML = `
+            <input class="active-check" type="radio" name="activePlan" ${active ? 'checked' : ''} title="Current event">
+            <input class="plan-time-input" type="text" inputmode="numeric" pattern="[0-9]{2}:[0-9]{2}:[0-9]{2}" placeholder="00:00:00" value="${time}" aria-label="Event time">
+            <input class="plan-label-input" value="${label}" aria-label="Event label">
+            <button class="remove-btn" onclick="this.closest('.flight-row').remove()" title="Remove">×</button>
+        `;
+        wrapper.appendChild(row);
+    }
+
+    function sendFlightPlan() {
+        const rows = [...document.querySelectorAll('.flight-row')];
+        const items = rows.map(row => ({
+            time: row.querySelector('.plan-time-input').value,
+            label: row.querySelector('.plan-label-input').value,
+            active: row.querySelector('.active-check').checked
+        }));
+
+        send('flightplan:update', {
+            title: document.getElementById('flightPlanTitleInput').value,
+            items
+        });
+        send('flightplan:show');
+    }
+
+    defaultPlan.forEach(item => addFlightRow(...item));
+
+    const activeAlertsContainer = document.getElementById('activeAlerts');
+    const noAlertsMsg = document.getElementById('noAlertsMsg');
+
+    channel.onmessage = event => {
+        const data = event.data || {};
+
+        if (data.action === 'sync:alert_active') {
+            noAlertsMsg.style.display = 'none';
+            const div = document.createElement('div');
+            div.className = 'monitor-item';
+            div.id = 'dash_' + data.id;
+            div.innerHTML = `<span>${data.title}</span><span class="status-text">ON SCREEN</span>`;
+            activeAlertsContainer.appendChild(div);
         }
 
-        // Timer Controls
-        function setTimer() {
-            let h = parseInt(document.getElementById('inp-hrs').value) || 0;
-            let m = parseInt(document.getElementById('inp-mins').value) || 0;
-            let s = parseInt(document.getElementById('inp-secs').value) || 0;
-            let totalMs = ((h * 3600) + (m * 60) + s) * 1000;
-            
-            state.paused = true;
-            state.remainingMs = totalMs;
-            state.durationMs = totalMs;
-            saveState();
-        }
+        if (data.action === 'sync:alert_removed') {
+            const element = document.getElementById('dash_' + data.id);
+            if (element) element.remove();
 
-        function startTimer() {
-            if (state.paused) {
-                state.tZero = Date.now() + state.remainingMs;
-                state.paused = false;
-                saveState();
+            if (!activeAlertsContainer.querySelector('.monitor-item')) {
+                noAlertsMsg.style.display = 'block';
             }
         }
-
-        function pauseTimer() {
-            if (!state.paused) {
-                state.remainingMs = state.tZero - Date.now();
-                state.paused = true;
-                saveState();
-            }
-        }
-
-        // Panel Control
-        function togglePanel(isOpen) {
-            state.panelOpen = isOpen;
-            saveState();
-        }
-
-        // Message Control
-        function showMessage(show) {
-            state.message.text = document.getElementById('msg-text').value;
-            state.message.color = document.getElementById('msg-color').value;
-            state.message.show = show;
-            saveState();
-        }
-
-        // Flight Plan Control
-        function renderFlightPlan() {
-            const list = document.getElementById('flight-plan-list');
-            list.innerHTML = '';
-            state.flightPlan.forEach((item, index) => {
-                list.innerHTML += `
-                    <div class="flex gap-2 items-center">
-                        <input type="text" value="${item.time}" onchange="updateFpTime(${index}, this.value)" class="w-1/3 bg-slate-900 border border-slate-700 rounded p-1 text-slate-300 text-sm" dir="ltr">
-                        <input type="text" value="${item.text}" onchange="updateFpText(${index}, this.value)" class="w-2/3 bg-slate-900 border border-slate-700 rounded p-1 text-slate-300 text-sm">
-                        <button onclick="removeFpItem(${index})" class="text-red-500 hover:text-red-400 px-2 font-bold">X</button>
-                    </div>
-                `;
-            });
-        }
-
-        function updateFpTime(i, val) { state.flightPlan[i].time = val; }
-        function updateFpText(i, val) { state.flightPlan[i].text = val; }
-        
-        function removeFpItem(i) {
-            state.flightPlan.splice(i, 1);
-            renderFlightPlan();
-        }
-
-        function addFlightItem() {
-            let t = document.getElementById('new-fp-time').value || "00:00:00";
-            let txt = document.getElementById('new-fp-text').value || "NEW EVENT";
-            state.flightPlan.push({ time: t, text: txt });
-            document.getElementById('new-fp-time').value = '';
-            document.getElementById('new-fp-text').value = '';
-            renderFlightPlan();
-            saveState();
-        }
-
-        function saveFlightPlan() {
-            saveState();
-            alert("תכנון הטיסה עודכן בשידור!");
-        }
-
-        // Init
-        renderFlightPlan();
-        saveState(); // Ensure initialized in localstorage for overlay
-    </script>
+    };
+</script>
 </body>
 </html>

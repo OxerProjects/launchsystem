@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Karantina:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+    <title>COSMOS Screen</title>
+    <style>
+        :root {
+            --cyan: #68e3ff;
+            --cyan-dark: #00b7df;
+            --black: #07090c;
+            --white: #ffffff;
+            --red: #ff4545;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #00ff00;
+            color: var(--white);
+            font-family: "Inter", sans-serif;
+        }
+
+        .screen-frame {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            padding: 6px;
+            border: 3px solid var(--cyan-dark);
+            overflow: hidden;
+        }
+
+        .brand {
+            position: absolute;
+            right: 14px;
+            top: 8px;
+            color: var(--black);
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: -0.7px;
+            text-transform: uppercase;
+            z-index: 20;
+        }
+
+        /* TIMER */
+        .countdown_container {
+            position: absolute;
+            left: 8px;
+            top: 8px;
+            width: 6px;
+            height: 42px;
+            overflow: hidden;
+            background: var(--white);
+            display: none;
+            opacity: 1;
+            z-index: 30;
+            transition: width .72s cubic-bezier(.65,0,.35,1);
+        }
+
+        .countdown_container.active { display: block; }
+        .countdown_container.open { width: 250px; }
+
+        .countdown_container.blinking .side {
+            animation: sideBlinkTwice .72s linear forwards;
+        }
+
+        @keyframes sideBlinkTwice {
+            0%, 18%, 42%, 66% { opacity: 1; }
+            28%, 52%, 82%, 100% { opacity: 0; }
+        }
+
+        .upside {
+            position: absolute;
+            inset: 0 auto auto 0;
+            width: 244px;
+            height: 39px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 9px;
+            color: var(--black);
+            white-space: nowrap;
+        }
+
+        .side {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 6px;
+            height: 39px;
+            background: var(--black);
+            z-index: 10;
+            transform: translateX(0);
+            transition: transform .72s cubic-bezier(.65,0,.35,1);
+            will-change: transform;
+        }
+
+        .countdown_container.open .side {
+            transform: translateX(244px);
+        }
+
+        .progress {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--white);
+            overflow: hidden;
+        }
+
+        .progressbar_fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0%;
+            background: var(--cyan);
+            transition: width 1s linear;
+        }
+
+        .title {
+            font-size: 16px;
+            font-weight: 500;
+            letter-spacing: -.3px;
+        }
+
+        .timerbox {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            height: 100%;
+        }
+
+        .direction,
+        .timer {
+            margin: 0;
+            font-family: "Karantina", system-ui;
+            line-height: 1;
+        }
+
+        .direction {
+            color: #9a9a9a;
+            font-size: 35px;
+            margin-right: 2px;
+        }
+
+        .timer {
+            color: var(--black);
+            font-size: 35px;
+            font-weight: 700;
+        }
+
+        /* STATUS BADGE */
+        .status-badge {
+            position: absolute;
+            left: 8px;
+            top: 54px;
+            min-height: 20px;
+            padding: 3px 8px 3px 5px;
+            background: var(--red);
+            color: white;
+            font-size: 10px;
+            font-weight: 800;
+            line-height: 14px;
+            transform: translateX(-130%);
+            opacity: 0;
+            transition: transform .4s cubic-bezier(.22,1,.36,1), opacity .25s ease;
+            z-index: 25;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-badge .material-symbols-outlined {
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .status-badge.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        /* FLIGHT PLAN */
+        .flight-plan {
+            position: absolute;
+            left: 14px;
+            top: 100px;
+            width: 310px;
+            color: white;
+            opacity: 0;
+            transform: translateX(-35px);
+            pointer-events: none;
+            transition: opacity .45s ease, transform .55s cubic-bezier(.22,1,.36,1);
+            z-index: 15;
+        }
+
+        .flight-plan.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .flight-plan-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 0 10px 0;
+            padding: 6px 10px 6px 8px;
+            background: rgba(7,9,12,.94);
+            border-left: 5px solid var(--cyan);
+            font-size: 16px;
+            line-height: 1;
+            font-weight: 900;
+            letter-spacing: .7px;
+            text-transform: uppercase;
+            clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+            box-shadow: 0 5px 16px rgba(0,0,0,.2);
+        }
+
+        .flight-plan-title::before {
+            content: "route";
+            font-family: "Material Symbols Outlined";
+            font-size: 18px;
+            color: var(--cyan);
+        }
+
+        .flight-plan-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .flight-plan-item {
+            position: relative;
+            display: grid;
+            grid-template-columns: 78px 1fr;
+            gap: 0;
+            align-items: stretch;
+            min-height: 34px;
+            background: rgba(7,9,12,.93);
+            overflow: hidden;
+            clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 0 100%);
+            box-shadow: 0 4px 14px rgba(0,0,0,.18);
+            opacity: 0;
+            transform: translateX(-18px);
+            animation: planItemIn .38s forwards;
+        }
+
+        .flight-plan-item::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            background: #4a5360;
+        }
+
+        .flight-plan-item.active::before {
+            background: var(--cyan);
+            box-shadow: 0 0 12px rgba(104,227,255,.6);
+        }
+
+        @keyframes planItemIn {
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .plan-time {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-left: 5px;
+            background: rgba(255,255,255,.08);
+            color: var(--cyan);
+            font-family: "Inter", sans-serif;
+            font-size: 12px;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: .3px;
+            border-right: 1px solid rgba(255,255,255,.1);
+        }
+
+        .plan-label {
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .25px;
+            text-transform: uppercase;
+        }
+
+        .flight-plan-item.active .plan-label {
+            color: white;
+        }
+
+        .flight-plan-item.active .plan-time {
+            background: rgba(104,227,255,.12);
+        }
+
+        /* ALERTS */
+        .alerts {
+            position: absolute;
+            left: 8px;
+            top: 78px;
+            width: 275px;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            z-index: 40;
+            pointer-events: none;
+        }
+
+        .alert {
+            position: relative;
+            display: grid;
+            grid-template-columns: 8px 35px 1fr;
+            width: 100%;
+            min-height: 52px;
+            background: rgba(7,9,12,.94);
+            color: white;
+            overflow: hidden;
+            clip-path: polygon(0 0, calc(100% - 11px) 0, 100% 11px, 100% 100%, 0 100%);
+            transform: translateX(-115%);
+            opacity: 0;
+            transition: transform .5s cubic-bezier(.22,1,.36,1), opacity .25s ease;
+            box-shadow: 0 5px 18px rgba(0,0,0,.25);
+        }
+
+        .alert.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .alert-accent { background: var(--cyan); }
+
+        .alert_icon_wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--cyan);
+        }
+
+        .alert_icon_wrapper .material-symbols-outlined {
+            font-size: 21px;
+        }
+
+        .alert_content {
+            padding: 7px 12px 8px 2px;
+        }
+
+        .alert-header {
+            font-size: 8px;
+            letter-spacing: 1px;
+            opacity: .55;
+            text-transform: uppercase;
+        }
+
+        .alert-title {
+            margin-top: 1px;
+            font-size: 13px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .alert-desc {
+            margin-top: 2px;
+            font-size: 10px;
+            color: rgba(255,255,255,.72);
+        }
+
+        /* LOWER THIRD */
+        .lower-third {
+            position: absolute;
+            left: 6px;
+            right: 6px;
+            bottom: 6px;
+            height: 30px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            align-items: stretch;
+            background: rgba(7,9,12,.96);
+            overflow: hidden;
+            z-index: 35;
+            transform: translateY(140%);
+            opacity: 0;
+            transition: transform .55s cubic-bezier(.22,1,.36,1), opacity .3s ease;
+        }
+
+        .lower-third.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .lower-location {
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            background: var(--cyan);
+            color: white;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .lower-title-window {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lower-title {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            color: white;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: .15px;
+            white-space: nowrap;
+        }
+
+        .lower-title.enter-from-right {
+            animation: titleEnterRight .5s cubic-bezier(.22,1,.36,1) forwards;
+        }
+
+        .lower-title.exit-to-left {
+            animation: titleExitLeft .42s cubic-bezier(.4,0,1,1) forwards;
+        }
+
+        @keyframes titleEnterRight {
+            from { transform: translateX(45px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes titleExitLeft {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(-45px); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+<div class="screen-frame">
+    <div class="brand" id="brandText">COSMOS</div>
+
+    <div class="countdown_container" id="timerContainer">
+        <div class="side"></div>
+        <div class="upside">
+            <div class="title" id="timerLabel">LAUNCH</div>
+            <div class="timerbox">
+                <p class="direction" id="timerDirection">-</p>
+                <p class="timer" id="timerText">00:00:00</p>
+            </div>
+        </div>
+        <div class="progress">
+            <div class="progressbar_fill" id="progressFill"></div>
+        </div>
+    </div>
+
+    <div class="status-badge" id="statusBadge">
+        <span class="material-symbols-outlined" id="statusIcon">cancel</span>
+        <span id="statusText">CANCELED</span>
+    </div>
+
+    <section class="flight-plan" id="flightPlan">
+        <h2 class="flight-plan-title" id="flightPlanTitle">FLIGHT<br>PLAN:</h2>
+        <ol class="flight-plan-list" id="flightPlanList"></ol>
+    </section>
+
+    <div class="alerts" id="alertsWrapper"></div>
+
+    <div class="lower-third" id="lowerThird">
+        <div class="lower-location" id="lowerLocation">LIVE STARBASE</div>
+        <div class="lower-title-window" id="lowerTitleWindow">
+            <div class="lower-title" id="lowerTitle">STARSHIP FIRST ORBIT TEST FLIGHT</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const channel = new BroadcastChannel('dashboard_controls');
+
+    const timerContainer = document.getElementById('timerContainer');
+    const timerText = document.getElementById('timerText');
+    const timerDirection = document.getElementById('timerDirection');
+    const timerLabel = document.getElementById('timerLabel');
+    const progressFill = document.getElementById('progressFill');
+    const alertsWrapper = document.getElementById('alertsWrapper');
+    const statusBadge = document.getElementById('statusBadge');
+    const statusIcon = document.getElementById('statusIcon');
+    const statusText = document.getElementById('statusText');
+    const brandText = document.getElementById('brandText');
+    const flightPlan = document.getElementById('flightPlan');
+    const flightPlanTitle = document.getElementById('flightPlanTitle');
+    const flightPlanList = document.getElementById('flightPlanList');
+    const lowerThird = document.getElementById('lowerThird');
+    const lowerLocation = document.getElementById('lowerLocation');
+    const lowerTitleWindow = document.getElementById('lowerTitleWindow');
+
+    let totalSeconds = 0;
+    let initialSeconds = 0;
+    let isTimerRunning = false;
+    let timerInterval = null;
+
+    function formatTime(sec) {
+        const absSec = Math.abs(sec);
+        const h = String(Math.floor(absSec / 3600)).padStart(2, '0');
+        const m = String(Math.floor((absSec % 3600) / 60)).padStart(2, '0');
+        const s = String(absSec % 60).padStart(2, '0');
+        return `${h}:${m}:${s}`;
+    }
+
+    function updateTimerUI() {
+        timerText.innerText = formatTime(totalSeconds);
+        timerDirection.innerText = totalSeconds < 0 ? '+' : '-';
+
+        if (initialSeconds > 0) {
+            let progress = ((initialSeconds - totalSeconds) / initialSeconds) * 100;
+            if (totalSeconds <= 0) progress = 100;
+            progressFill.style.width = `${Math.max(0, Math.min(100, progress))}%`;
+        } else {
+            progressFill.style.width = '100%';
+        }
+    }
+
+    function tick() {
+        if (!isTimerRunning) return;
+        totalSeconds--;
+        updateTimerUI();
+    }
+
+    function showTimer() {
+        clearTimeout(timerContainer.hideTimer);
+        clearTimeout(timerContainer.blinkTimer);
+        timerContainer.classList.remove('open', 'blinking');
+        timerContainer.classList.add('active');
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => timerContainer.classList.add('open'));
+        });
+    }
+
+    function hideTimer() {
+        clearTimeout(timerContainer.hideTimer);
+        clearTimeout(timerContainer.blinkTimer);
+        timerContainer.classList.remove('blinking', 'open');
+
+        timerContainer.hideTimer = setTimeout(() => {
+            timerContainer.classList.add('blinking');
+            timerContainer.blinkTimer = setTimeout(() => {
+                timerContainer.classList.remove('active', 'blinking');
+            }, 720);
+        }, 720);
+    }
+
+    function switchLowerTitle(nextTitle) {
+        const current = lowerTitleWindow.querySelector('.lower-title');
+        const incoming = document.createElement('div');
+        incoming.className = 'lower-title enter-from-right';
+        incoming.textContent = nextTitle || '';
+        lowerTitleWindow.appendChild(incoming);
+
+        if (current) {
+            current.classList.add('exit-to-left');
+            setTimeout(() => current.remove(), 440);
+        }
+    }
+
+    function renderFlightPlan(data) {
+        flightPlanTitle.innerHTML = (data.title || 'FLIGHT PLAN:').replace(/\n/g, '<br>');
+        flightPlanList.innerHTML = '';
+
+        (data.items || []).forEach((item, index) => {
+            const li = document.createElement('li');
+            li.className = `flight-plan-item${item.active ? ' active' : ''}`;
+            li.style.animationDelay = `${index * 70}ms`;
+            li.innerHTML = `
+                <span class="plan-time">${item.time || '00:00:00'}</span>
+                <span class="plan-label">${item.label || 'EVENT'}</span>
+            `;
+            flightPlanList.appendChild(li);
+        });
+    }
+
+    function addAlert(data) {
+        const alertId = 'alert_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert';
+        alertDiv.id = alertId;
+        alertDiv.innerHTML = `
+            <div class="alert-accent" style="background:${data.accentColor || '#68e3ff'}"></div>
+            <div class="alert_icon_wrapper" style="color:${data.accentColor || '#68e3ff'}">
+                <span class="material-symbols-outlined">${data.icon || 'info'}</span>
+            </div>
+            <div class="alert_content">
+                <div class="alert-header">${new Date().toLocaleTimeString('en-GB')} · SYSTEM MESSAGE</div>
+                <div class="alert-title">${data.title || 'ALERT'}</div>
+                <div class="alert-desc">${data.desc || ''}</div>
+            </div>
+        `;
+
+        alertsWrapper.appendChild(alertDiv);
+        requestAnimationFrame(() => requestAnimationFrame(() => alertDiv.classList.add('show')));
+        channel.postMessage({ action: 'sync:alert_active', id: alertId, title: data.title || 'ALERT' });
+
+        setTimeout(() => {
+            alertDiv.classList.remove('show');
+            setTimeout(() => {
+                alertDiv.remove();
+                channel.postMessage({ action: 'sync:alert_removed', id: alertId });
+            }, 520);
+        }, (data.duration || 5) * 1000);
+    }
+
+    channel.onmessage = (event) => {
+        const data = event.data || {};
+
+        if (data.action === 'timer:show') showTimer();
+        if (data.action === 'timer:hide') hideTimer();
+
+        if (data.action === 'timer:set') {
+            const parts = String(data.timeStr || '').split(':').map(Number);
+            if (parts.length === 3 && parts.every(Number.isFinite)) {
+                totalSeconds = (parts[0] * 3600) + (parts[1] * 60) + parts[2];
+                initialSeconds = totalSeconds;
+                updateTimerUI();
+            }
+        }
+
+        if (data.action === 'timer:label') {
+            timerLabel.textContent = data.label || 'LAUNCH';
+        }
+
+        if (data.action === 'timer:play' && !isTimerRunning) {
+            isTimerRunning = true;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(tick, 1000);
+        }
+
+        if (data.action === 'timer:pause') {
+            isTimerRunning = false;
+            clearInterval(timerInterval);
+        }
+
+        if (data.action === 'timer:reset') {
+            totalSeconds = initialSeconds;
+            updateTimerUI();
+        }
+
+        if (data.action === 'status:update') {
+            statusText.textContent = data.text || 'CANCELED';
+            statusIcon.textContent = data.icon || 'cancel';
+            statusBadge.style.background = data.color || '#ff4545';
+        }
+
+        if (data.action === 'status:show') statusBadge.classList.add('show');
+        if (data.action === 'status:hide') statusBadge.classList.remove('show');
+
+        if (data.action === 'brand:update') {
+            brandText.textContent = data.text || 'COSMOS';
+        }
+
+        if (data.action === 'lower:update') {
+            lowerLocation.textContent = data.location || '';
+            switchLowerTitle(data.title || '');
+            lowerThird.classList.add('show');
+        }
+
+        if (data.action === 'lower:show') lowerThird.classList.add('show');
+        if (data.action === 'lower:hide') lowerThird.classList.remove('show');
+
+        if (data.action === 'flightplan:update') {
+            renderFlightPlan(data);
+        }
+
+        if (data.action === 'flightplan:show') flightPlan.classList.add('show');
+        if (data.action === 'flightplan:hide') flightPlan.classList.remove('show');
+
+        if (data.action === 'alert:add') addAlert(data);
+    };
+
+    renderFlightPlan({
+        title: 'FLIGHT\nPLAN:',
+        items: [
+            { time: '00:00:00', label: 'LAUNCH', active: true },
+            { time: '00:00:30', label: 'MAX Q' },
+            { time: '00:01:30', label: 'STAGE SEP' },
+            { time: '00:05:00', label: 'BOOSTER LANDING' },
+            { time: '00:09:00', label: 'DEPLOY PAYLOAD' },
+            { time: '00:13:00', label: 'SHIP LANDING' }
+        ]
+    });
+</script>
+</body>
+</html>
